@@ -38,9 +38,7 @@ public:
     }
     os << "\n";
     os << "|_Fields\n";
-    bool hasFields = false;
     for (const clang::FieldDecl *Field : Record->fields()) {
-      hasFields = true;
       os << "| |_ ";
       os << Field->getNameAsString() << " (";
       os << Field->getType().getAsString() << "|";
@@ -60,16 +58,12 @@ public:
       }
       os << ")\n";
     }
-    if (hasFields) {
-      os << "|\n";
-    }
+    os << "|\n";
     os << "|_Methods\n";
-    bool hasMethods = false;
     for (const clang::CXXMethodDecl *Method : Record->methods()) {
       if (Method->isImplicit() || llvm::isa<clang::CXXDestructorDecl>(Method)) {
         continue;
       }
-      hasMethods = true;
       os << "| |_ ";
       os << Method->getNameAsString() << " (";
       os << Method->getReturnType().getAsString() << "(";
@@ -80,8 +74,7 @@ public:
           os << ", ";
         }
       }
-      os << ")";
-      os << "|";
+      os << ")|";
       switch (Method->getAccess()) {
       case clang::AS_public:
         os << "public";
@@ -96,6 +89,9 @@ public:
         os << "none";
         break;
       }
+      if (Method->isConst()) {
+        os << "|const";
+      }
       if (Method->isPureVirtual()) {
         os << "|virtual|pure";
       } else if (Method->hasAttr<clang::OverrideAttr>()) {
@@ -105,7 +101,6 @@ public:
       }
       os << ")\n";
     }
-    os << "\n";
     return true;
   }
 };

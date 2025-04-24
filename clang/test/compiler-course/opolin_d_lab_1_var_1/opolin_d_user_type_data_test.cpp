@@ -96,7 +96,7 @@ class MultipleDerived : public Base1, public Base2 {};
 // CHECK-NEXT: |_Methods
 // CHECK-NEXT: | |_ simpleMethod (void()|public)
 // CHECK-NEXT: | |_ methodWithParams (int(int, double)|public)
-// CHECK-NEXT: | |_ constMethod (void()|public)
+// CHECK-NEXT: | |_ constMethod (void()|public|const)
 // CHECK-NEXT: | |_ anotherPrivate (bool(char)|private)
 // CHECK-EMPTY:
 struct MethodTester {
@@ -170,7 +170,7 @@ class ForwardDeclaredStruct;
 
 // CHECK: UseForward
 // CHECK-NEXT: |_Fields
-// CHECK-NEXT: | |_ ptr (ForwardDeclaredStruct *|private)
+// CHECK-NEXT: | |_ ptr (class ForwardDeclaredStruct *|private)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
 // CHECK-EMPTY:
