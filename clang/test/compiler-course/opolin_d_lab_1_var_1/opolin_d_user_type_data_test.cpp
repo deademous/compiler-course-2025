@@ -4,7 +4,6 @@
 // CHECK-NEXT: |_Fields
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 struct EmptyStruct {};
 
 // CHECK: SimpleStruct
@@ -13,7 +12,6 @@ struct EmptyStruct {};
 // CHECK-NEXT: | |_ y (double|public)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 struct SimpleStruct {
     int x;
     double y;
@@ -24,7 +22,6 @@ struct SimpleStruct {
 // CHECK-NEXT: | |_ data (char *|private)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 class SimpleClass {
     char* data;
 };
@@ -39,7 +36,6 @@ class SimpleClass {
 // CHECK-NEXT: | |_ publicMethod (void()|public)
 // CHECK-NEXT: | |_ protectedMethod (int()|protected)
 // CHECK-NEXT: | |_ privateMethod (double()|private)
-// CHECK-EMPTY:
 class AccessTest {
 public:
     int pubField;
@@ -56,7 +52,6 @@ private:
 // CHECK-NEXT: |_Fields
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 struct Base {};
 
 // CHECK: Derived -> Base
@@ -64,7 +59,6 @@ struct Base {};
 // CHECK-NEXT: | |_ derivedData (int|public)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 struct Derived : Base {
     int derivedData;
 };
@@ -73,21 +67,18 @@ struct Derived : Base {
 // CHECK-NEXT: |_Fields
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 struct Base1 {};
 
 // CHECK: Base2
 // CHECK-NEXT: |_Fields
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 struct Base2 {};
 
 // CHECK: MultipleDerived -> Base1, Base2
 // CHECK-NEXT: |_Fields
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 class MultipleDerived : public Base1, public Base2 {};
 
 // CHECK: MethodTester
@@ -98,7 +89,6 @@ class MultipleDerived : public Base1, public Base2 {};
 // CHECK-NEXT: | |_ methodWithParams (int(int, double)|public)
 // CHECK-NEXT: | |_ constMethod (void()|public|const)
 // CHECK-NEXT: | |_ anotherPrivate (bool(char)|private)
-// CHECK-EMPTY:
 struct MethodTester {
     void simpleMethod() {}
     int methodWithParams(int a, double b) { return a; }
@@ -113,7 +103,6 @@ private:
 // CHECK-NEXT: |_Methods
 // CHECK-NEXT: | |_ virtualFunc (void()|public|virtual)
 // CHECK-NEXT: | |_ pureVirtualFunc (int()|public|virtual|pure)
-// CHECK-EMPTY:
 class AbstractBase {
 public:
     virtual void virtualFunc() {}
@@ -126,7 +115,6 @@ public:
 // CHECK-NEXT: |_Methods
 // CHECK-NEXT: | |_ virtualFunc (void()|public|override)
 // CHECK-NEXT: | |_ pureVirtualFunc (int()|public|override)
-// CHECK-EMPTY:
 class ConcreteDerived : public AbstractBase {
 public:
     void virtualFunc() override {}
@@ -141,7 +129,6 @@ public:
 // CHECK-NEXT: |_Methods
 // CHECK-NEXT: | |_ sleep (void()|public|virtual|pure)
 // CHECK-NEXT: | |_ eat (void()|public|virtual|pure)
-// CHECK-EMPTY:
 struct Human {
     unsigned age;
     unsigned height;
@@ -157,7 +144,6 @@ struct Human {
 // CHECK-NEXT: | |_ sleep (void()|public|override)
 // CHECK-NEXT: | |_ eat (void()|public|override)
 // CHECK-NEXT: | |_ work (void()|public)
-// CHECK-EMPTY:
 struct Engineer : Human {
     unsigned salary;
     void sleep() override { }
@@ -173,7 +159,6 @@ class ForwardDeclaredStruct;
 // CHECK-NEXT: | |_ ptr (class ForwardDeclaredStruct *|private)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 class UseForward {
     ForwardDeclaredStruct *ptr;
 };
@@ -184,7 +169,6 @@ class UseForward {
 // CHECK-NEXT: |_Methods
 // CHECK-NEXT: | |_ createInner (void()|public)
 // CHECK-NOT: InnerStruct
-// CHECK-EMPTY:
 class OuterClass {
 public:
     void createInner() {
@@ -200,7 +184,6 @@ public:
 // CHECK-NEXT: | |_ value (T|private)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
-// CHECK-EMPTY:
 template<typename T>
 class MyTemplate {
     T value;
