@@ -156,7 +156,7 @@ class ForwardDeclaredStruct;
 
 // CHECK: UseForward
 // CHECK-NEXT: |_Fields
-// CHECK-NEXT: | |_ ptr (class ForwardDeclaredStruct *|private)
+// CHECK-NEXT: | |_ ptr (ForwardDeclaredStruct *|private)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
 class UseForward {
