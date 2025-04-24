@@ -5,11 +5,11 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace {
-
 class PrintUserTypeVisitor final
-  : public clang::RecursiveASTVisitor<PrintUserTypeVisitor> {
+    : public clang::RecursiveASTVisitor<PrintUserTypeVisitor> {
 public:
   explicit PrintUserTypeVisitor(clang::ASTContext *context) {}
+
   bool VisitCXXRecordDecl(clang::CXXRecordDecl *Record) {
     if (!Record->isThisDeclarationADefinition() || Record->isImplicit()) {
       return true;
@@ -17,80 +17,95 @@ public:
     if (Record->isLocalClass()) {
       return true;
     }
-    llvm::raw_ostream &OS = llvm::outs();
-    OS << Record->getNameAsString();
+    llvm::raw_ostream &os = llvm::outs();
+    os << Record->getNameAsString();
     bool firstBase = true;
     if (Record->getNumBases() > 0) {
-      OS << " -> ";
+      os << " -> ";
       for (const clang::CXXBaseSpecifier &BaseSpec : Record->bases()) {
         if (!firstBase) {
-          OS << ", ";
+          os << ", ";
         }
-        const clang::RecordDecl* BaseRecordDecl = BaseSpec.getType()->getAsRecordDecl();
+        const clang::RecordDecl *BaseRecordDecl =
+            BaseSpec.getType()->getAsRecordDecl();
         if (BaseRecordDecl) {
-          OS << BaseRecordDecl->getNameAsString();
+          os << BaseRecordDecl->getNameAsString();
         } else {
-          OS << BaseSpec.getType().getAsString();
+          os << BaseSpec.getType().getAsString();
         }
         firstBase = false;
       }
     }
-    OS << "\n";
-    OS << "|_Fields\n";
+    os << "\n";
+    os << "|_Fields\n";
     bool hasFields = false;
     for (const clang::FieldDecl *Field : Record->fields()) {
       hasFields = true;
-      OS << "| |_ ";
-      OS << Field->getNameAsString() << " (";
-      OS << Field->getType().getAsString() << "|";
+      os << "| |_ ";
+      os << Field->getNameAsString() << " (";
+      os << Field->getType().getAsString() << "|";
       switch (Field->getAccess()) {
-        case clang::AS_public:    OS << "public"; break;
-        case clang::AS_protected: OS << "protected"; break;
-        case clang::AS_private:   OS << "private"; break;
-        default:                  OS << "none"; break;
+      case clang::AS_public:
+        os << "public";
+        break;
+      case clang::AS_protected:
+        os << "protected";
+        break;
+      case clang::AS_private:
+        os << "private";
+        break;
+      default:
+        os << "none";
+        break;
       }
-      OS << ")\n";
+      os << ")\n";
     }
     if (hasFields) {
-      OS << "|\n";
+      os << "|\n";
     }
-    OS << "|_Methods\n";
+    os << "|_Methods\n";
     bool hasMethods = false;
     for (const clang::CXXMethodDecl *Method : Record->methods()) {
       if (Method->isImplicit() || llvm::isa<clang::CXXDestructorDecl>(Method)) {
         continue;
       }
       hasMethods = true;
-      OS << "| |_ ";
-      OS << Method->getNameAsString() << " (";
-      OS << Method->getReturnType().getAsString() << "(";
+      os << "| |_ ";
+      os << Method->getNameAsString() << " (";
+      os << Method->getReturnType().getAsString() << "(";
       unsigned numParams = Method->getNumParams();
       for (unsigned i = 0; i < numParams; ++i) {
-        OS << Method->getParamDecl(i)->getType().getAsString();
+        os << Method->getParamDecl(i)->getType().getAsString();
         if (i < numParams - 1) {
-          OS << ", ";
+          os << ", ";
         }
       }
-      OS << ")";
-      OS << "|";
+      os << ")";
+      os << "|";
       switch (Method->getAccess()) {
-        case clang::AS_public:    OS << "public"; break;
-        case clang::AS_protected: OS << "protected"; break;
-        case clang::AS_private:   OS << "private"; break;
-        default:                  OS << "none"; break;
+      case clang::AS_public:
+        os << "public";
+        break;
+      case clang::AS_protected:
+        os << "protected";
+        break;
+      case clang::AS_private:
+        os << "private";
+        break;
+      default:
+        os << "none";
+        break;
       }
-      if (Method->isPure()) {
-        OS << "|virtual|pure";
+      if (Method->isPureVirtual()) {
+        os << "|virtual|pure";
+      } else if (Method->hasAttr<clang::OverrideAttr>()) {
+        os << "|override";
+      } else if (Method->isVirtual()) {
+        os << "|virtual";
       }
-      else if (Method->hasAttr<clang::OverrideAttr>()) {
-        OS << "|override";
-      }
-      else if (Method->isVirtual()) {
-        OS << "|virtual";
-      }
-      OS << ")\n";
+      os << ")\n";
     }
-    OS << "\n";
+    os << "\n";
     return true;
   }
 };
@@ -100,7 +115,8 @@ private:
   PrintUserTypeVisitor Visitor;
 
 public:
-  explicit PrintUserTypeConsumer(clang::ASTContext *context) : Visitor(context) {}
+  explicit PrintUserTypeConsumer(clang::ASTContext *context)
+      : Visitor(context) {}
   void HandleTranslationUnit(clang::ASTContext &context) override {
     Visitor.TraverseDecl(context.getTranslationUnitDecl());
   }
@@ -118,7 +134,8 @@ public:
   }
 };
 
-}
+} // namespace
+
 static clang::FrontendPluginRegistry::Add<PrintUserTypeAction>
-  X("PrintUserTypeInfo",
-    "Prints info about user types (fields, methods, bases)");
+    X("PrintUserTypeInfo",
+      "Prints info about user types (fields, methods, bases)");
