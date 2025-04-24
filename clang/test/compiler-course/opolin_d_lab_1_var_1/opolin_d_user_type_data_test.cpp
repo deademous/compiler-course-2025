@@ -88,13 +88,13 @@ class MultipleDerived : public Base1, public Base2 {};
 // CHECK-NEXT: | |_ simpleMethod (void()|public)
 // CHECK-NEXT: | |_ methodWithParams (int(int, double)|public)
 // CHECK-NEXT: | |_ constMethod (void()|public|const)
-// CHECK-NEXT: | |_ anotherPrivate (bool(char)|private)
+// CHECK-NEXT: | |_ anotherPrivate (_Bool(char)|private)
 struct MethodTester {
     void simpleMethod() {}
     int methodWithParams(int a, double b) { return a; }
     void constMethod() const {}
 private:
-    _Bool anotherPrivate(char c) { return true; }
+    bool anotherPrivate(char c) { return true; }
 };
 
 // CHECK: AbstractBase
