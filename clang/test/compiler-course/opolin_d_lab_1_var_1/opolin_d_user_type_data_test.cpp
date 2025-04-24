@@ -30,7 +30,7 @@ class SimpleClass {
 // CHECK-NEXT: |_Fields
 // CHECK-NEXT: | |_ pubField (int|public)
 // CHECK-NEXT: | |_ protField (float|protected)
-// CHECK-NEXT: | |_ privField (bool|private)
+// CHECK-NEXT: | |_ privField (_Bool|private)
 // CHECK-NEXT: |
 // CHECK-NEXT: |_Methods
 // CHECK-NEXT: | |_ publicMethod (void()|public)
