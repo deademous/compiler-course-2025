@@ -94,7 +94,7 @@ struct MethodTester {
     int methodWithParams(int a, double b) { return a; }
     void constMethod() const {}
 private:
-    bool anotherPrivate(char c) { return true; }
+    _Bool anotherPrivate(char c) { return true; }
 };
 
 // CHECK: AbstractBase
