@@ -27,6 +27,14 @@ define double @with_constants(double %a) {
   ret double %add
 }
 
+; CHECK-LABEL: @negative_constant
+; CHECK: call double @llvm.fmuladd.f64(double %a, double %b, double -1.0{{[0+e+]*}})
+define double @negative_constant(double %a, double %b) {
+  %mul = fmul double %a, %b
+  %add = fadd double %mul, -1.0
+  ret double %add
+}
+
 ; CHECK-LABEL: @float_type
 ; CHECK: call float @llvm.fmuladd.f32(float %a, float %b, float %c)
 define float @float_type(float %a, float %b, float %c) {
@@ -64,5 +72,13 @@ define double @mixed_types(double %a, float %b, double %c) {
   %b_ext = fpext float %b to double
   %mul = fmul double %a, %b_ext
   %add = fadd double %mul, %c
+  ret double %add
+}
+
+; CHECK-LABEL: @no_change
+; CHECK: fadd double %a, %b
+; CHECK-NOT: fmuladd
+define double @no_change(double %a, double %b) {
+  %add = fadd double %a, %b
   ret double %add
 }
