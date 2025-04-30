@@ -35,8 +35,9 @@ struct LlvmFmaPass : llvm::PassInfoMixin<LlvmFmaPass> {
             FmaResult->takeName(AddOp);
             AddOp->replaceAllUsesWith(FmaResult);
             AddOp->eraseFromParent();
-            MulOp->eraseFromParent();
-
+            if (MulOp->use_empty()) {
+              MulOp->eraseFromParent();
+            }
             Changed = true;
             break;
           }

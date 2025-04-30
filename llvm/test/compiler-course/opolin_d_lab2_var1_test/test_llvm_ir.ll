@@ -36,8 +36,10 @@ define float @float_type(float %a, float %b, float %c) {
 }
 
 ; CHECK-LABEL: @multi_use
-; CHECK: fmul double %a, %b
-; CHECK: fadd double %mul, %c
+; CHECK-DAG: call double @llvm.fmuladd.f64(double %a, double %b, double %c)
+; CHECK-DAG: call double @llvm.fmuladd.f64(double %a, double %b, double %d)
+; CHECK-NOT: fmul
+; CHECK-NOT: fadd
 define double @multi_use(double %a, double %b, double %c, double %d) {
   %mul = fmul double %a, %b
   %add1 = fadd double %mul, %c
@@ -65,8 +67,9 @@ define i32 @int_ops(i32 %a, i32 %b, i32 %c) {
 }
 
 ; CHECK-LABEL: @mixed_types
-; CHECK: fmul double %a, %b
-; CHECK: fadd double %mul, %c
+; CHECK: call double @llvm.fmuladd.f64(double %a, double %b_ext, double %c)
+; CHECK-NOT: fmul
+; CHECK-NOT: fadd
 define double @mixed_types(double %a, float %b, double %c) {
   %b_ext = fpext float %b to double
   %mul = fmul double %a, %b_ext
