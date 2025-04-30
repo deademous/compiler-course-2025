@@ -24,14 +24,14 @@ struct LlvmFmaPass : llvm::PassInfoMixin<LlvmFmaPass> {
             llvm::Value *OpB = MulOp->getOperand(1);
             llvm::Value *OpC = AddOp->getOperand(1 - i);
 
-            if (MulOp->getType() != OpA->getType() || MulOp->getType() != OpB->getType() || MulOp->getType() != OpC->getType()) {
+            if (MulOp->getType() != OpA->getType() ||
+                MulOp->getType() != OpB->getType() ||
+                MulOp->getType() != OpC->getType()) {
               continue;
             }
             llvm::IRBuilder<> Builder(AddOp);
             llvm::Value *FmaResult = Builder.CreateIntrinsic(
-              llvm::Intrinsic::fmuladd,
-              {MulOp->getType()},
-              {OpA, OpB, OpC});
+                llvm::Intrinsic::fmuladd, {MulOp->getType()}, {OpA, OpB, OpC});
             FmaResult->takeName(AddOp);
             AddOp->replaceAllUsesWith(FmaResult);
             AddOp->eraseFromParent();
@@ -44,8 +44,8 @@ struct LlvmFmaPass : llvm::PassInfoMixin<LlvmFmaPass> {
         }
       }
     }
-  return Changed ? llvm::PreservedAnalyses::none()
-                 : llvm::PreservedAnalyses::all();
+    return Changed ? llvm::PreservedAnalyses::none()
+                   : llvm::PreservedAnalyses::all();
   }
 
   static bool isRequired() { return true; }

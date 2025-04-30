@@ -2,9 +2,9 @@
 ; RUN: -passes=LlvmFmaPass -S %s | FileCheck %s
 
 ; CHECK-LABEL: @basic_case
-; CHECK-NEXT: %0 = call double @llvm.fmuladd.f64(double %a, double %b, double %c)
-; CHECK-NOT: fmul
-; CHECK-NOT: fadd
+; CHECK: call double @llvm.fmuladd.f64(double %a, double %b, double %c)
+; CHECK-NOT: fmul double
+; CHECK-NOT: fadd double
 define double @basic_case(double %a, double %b, double %c) {
   %mul = fmul double %a, %b
   %add = fadd double %mul, %c
@@ -20,7 +20,7 @@ define double @reverse_order(double %a, double %b, double %c) {
 }
 
 ; CHECK-LABEL: @with_constants
-; CHECK: call double @llvm.fmuladd.f64(double %a, double 2.0, double 3.0)
+; CHECK: call double @llvm.fmuladd.f64(double %a, double 2.0{{[0+e+]*}}, double 3.0{{[0+e+]*}})
 define double @with_constants(double %a) {
   %mul = fmul double %a, 2.0
   %add = fadd double %mul, 3.0
@@ -38,8 +38,8 @@ define float @float_type(float %a, float %b, float %c) {
 ; CHECK-LABEL: @multi_use
 ; CHECK-DAG: call double @llvm.fmuladd.f64(double %a, double %b, double %c)
 ; CHECK-DAG: call double @llvm.fmuladd.f64(double %a, double %b, double %d)
-; CHECK-NOT: fmul
-; CHECK-NOT: fadd
+; CHECK-NOT: fmul double
+; CHECK-NOT: fadd double
 define double @multi_use(double %a, double %b, double %c, double %d) {
   %mul = fmul double %a, %b
   %add1 = fadd double %mul, %c
@@ -68,11 +68,15 @@ define i32 @int_ops(i32 %a, i32 %b, i32 %c) {
 
 ; CHECK-LABEL: @mixed_types
 ; CHECK: call double @llvm.fmuladd.f64(double %a, double %b_ext, double %c)
-; CHECK-NOT: fmul
-; CHECK-NOT: fadd
+; CHECK-NOT: fmul double
+; CHECK-NOT: fadd double
 define double @mixed_types(double %a, float %b, double %c) {
   %b_ext = fpext float %b to double
   %mul = fmul double %a, %b_ext
   %add = fadd double %mul, %c
   ret double %add
 }
+
+; CHECK-LABEL: declare
+; CHECK: declare double @llvm.fmuladd.f64(double, double, double)
+; CHECK: declare float @llvm.fmuladd.f32(float, float, float)
