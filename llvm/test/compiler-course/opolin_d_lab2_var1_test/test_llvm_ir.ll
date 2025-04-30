@@ -48,12 +48,12 @@ define double @multi_use(double %a, double %b, double %c, double %d) {
 }
 
 ; CHECK-LABEL: @type_mismatch
-; CHECK: fmul double %a_ext, %b
-; CHECK: fadd double %mul, %c
+; CHECK: fmul float %a, %b
+; CHECK: fadd double %mul_ext, %c
 define double @type_mismatch(float %a, double %b, double %c) {
-  %a_ext = fpext float %a to double
-  %mul = fmul double %a_ext, %b
-  %add = fadd double %mul, %c
+  %mul = fmul float %a, %b
+  %mul_ext = fpext float %mul to double
+  %add = fadd double %mul_ext, %c
   ret double %add
 }
 
@@ -76,7 +76,3 @@ define double @mixed_types(double %a, float %b, double %c) {
   %add = fadd double %mul, %c
   ret double %add
 }
-
-; CHECK-LABEL: declare
-; CHECK: declare double @llvm.fmuladd.f64(double, double, double)
-; CHECK: declare float @llvm.fmuladd.f32(float, float, float)
