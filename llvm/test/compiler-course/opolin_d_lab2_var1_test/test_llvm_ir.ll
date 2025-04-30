@@ -48,12 +48,12 @@ define double @multi_use(double %a, double %b, double %c, double %d) {
 }
 
 ; CHECK-LABEL: @type_mismatch
-; CHECK: fmul float %a, %b
-; CHECK: fadd double %mul_ext, %c
+; CHECK: fmul double %a_ext, %b
+; CHECK: fadd double %mul, %c
 define double @type_mismatch(float %a, double %b, double %c) {
-  %mul = fmul float %a, %b
-  %mul_ext = fpext float %mul to double
-  %add = fadd double %mul_ext, %c
+  %a_ext = fpext float %a to double
+  %mul = fmul double %a_ext, %b
+  %add = fadd double %mul, %c
   ret double %add
 }
 
