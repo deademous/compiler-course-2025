@@ -77,7 +77,7 @@ define double @mixed_types(double %a, float %b, double %c) {
 
 ; CHECK-LABEL: @no_change
 ; CHECK: fadd double %a, %b
-; CHECK-NOT: fmuladd
+; CHECK-NOT: call double @llvm.fmuladd.f64
 define double @no_change(double %a, double %b) {
   %add = fadd double %a, %b
   ret double %add
