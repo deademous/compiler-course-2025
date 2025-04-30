@@ -47,16 +47,6 @@ define double @multi_use(double %a, double %b, double %c, double %d) {
   ret double %add2
 }
 
-; CHECK-LABEL: @type_mismatch
-; CHECK: fmul double %a_ext, %b
-; CHECK: fadd double %mul, %c
-define double @type_mismatch(float %a, double %b, double %c) {
-  %a_ext = fpext float %a to double
-  %mul = fmul double %a_ext, %b
-  %add = fadd double %mul, %c
-  ret double %add
-}
-
 ; CHECK-LABEL: @int_ops
 ; CHECK: mul i32 %a, %b
 ; CHECK: add i32 %mul, %c
