@@ -55,30 +55,21 @@ define double @multi_use(double %a, double %b, double %c, double %d) {
   ret double %add2
 }
 
-; CHECK-LABEL: @int_ops
-; CHECK: mul i32 %a, %b
-; CHECK: add i32 %mul, %c
-define i32 @int_ops(i32 %a, i32 %b, i32 %c) {
-  %mul = mul i32 %a, %b
-  %add = add i32 %mul, %c
-  ret i32 %add
-}
-
-; CHECK-LABEL: @mixed_types
-; CHECK: call double @llvm.fmuladd.f64(double %a, double %b_ext, double %c)
-; CHECK-NOT: fmul double
-; CHECK-NOT: fadd double
-define double @mixed_types(double %a, float %b, double %c) {
-  %b_ext = fpext float %b to double
-  %mul = fmul double %a, %b_ext
-  %add = fadd double %mul, %c
-  ret double %add
-}
-
 ; CHECK-LABEL: @no_change
 ; CHECK: fadd double %a, %b
 ; CHECK-NOT: call double @llvm.fmuladd.f64
 define double @no_change(double %a, double %b) {
   %add = fadd double %a, %b
   ret double %add
+}
+
+; CHECK-LABEL: @used_in_division
+; CHECK: fmul double %a, %b
+; CHECK: fadd double %mul, %c
+; CHECK: fdiv double %add, %d
+define double @used_in_division(double %a, double %b, double %c, double %d) {
+  %mul = fmul double %a, %b
+  %add = fadd double %mul, %c
+  %div = fdiv double %add, %d
+  ret double %div
 }

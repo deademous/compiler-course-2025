@@ -19,7 +19,7 @@ struct LlvmFmaPass : llvm::PassInfoMixin<LlvmFmaPass> {
           llvm::Value *Operand = AddOp->getOperand(i);
           auto *MulOp = llvm::dyn_cast<llvm::BinaryOperator>(Operand);
 
-          if (MulOp && MulOp->getOpcode() == llvm::Instruction::FMul) {
+          if (MulOp && MulOp->getOpcode() == llvm::Instruction::FMul && MulOp->hasOneUse()) {
             llvm::Value *OpA = MulOp->getOperand(0);
             llvm::Value *OpB = MulOp->getOperand(1);
             llvm::Value *OpC = AddOp->getOperand(1 - i);
