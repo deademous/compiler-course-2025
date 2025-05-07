@@ -58,6 +58,7 @@ public:
       }
       os << ")\n";
     }
+
     os << "|\n";
     os << "|_Methods\n";
     for (const clang::CXXMethodDecl *Method : Record->methods()) {
