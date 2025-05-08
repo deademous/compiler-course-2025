@@ -9,108 +9,103 @@ using namespace llvm;
 
 namespace {
 class AVXLogicCombinerPass : public MachineFunctionPass {
-  struct LogicPattern {
-    unsigned FirstOp;
-    unsigned SecondOp;
-    unsigned CombinedOp;
-    LogicPattern(unsigned F, unsigned S, unsigned C) 
-            : FirstOp(F), SecondOp(S), CombinedOp(C) {}
-  };
-  DenseMap<unsigned, unsigned> OpcodeVariantMap;
-  std::vector<LogicPattern> SupportedPatterns;
-  const X86InstrInfo* TII;
-  MachineRegisterInfo* MRI;
+  const X86InstrInfo *TII = nullptr;
+  MachineRegisterInfo *RegInfo = nullptr;
+  DenseMap<unsigned, unsigned> scalarToAVX;
 
-  void initMappings() {
-    OpcodeVariantMap = {
-      {X86::ANDPSrr, X86::VANDPSrr}, {X86::ORPSrr, X86::VORPSrr},
-      {X86::XORPSrr, X86::VXORPSrr}, {X86::PANDrr,  X86::VPANDrr},
-      {X86::PORrr,   X86::VPORrr},   {X86::PXORrr,  X86::VPXORrr}
+  void initMap() {
+    scalarToAVX = {
+      {X86::PANDrr,  X86::VPANDrr},  {X86::PORrr,   X86::VPORrr},
+      {X86::PXORrr,  X86::VPXORrr},  {X86::PANDNrr, X86::VPANDNrr},
+      {X86::ANDPSrr, X86::VANDPSrr}, {X86::ORPSrr,  X86::VORPSrr},
+      {X86::XORPSrr, X86::VXORPSrr}, {X86::ANDPDrr, X86::VANDPDrr},
+      {X86::ORPDrr,  X86::VORPDrr},  {X86::XORPDrr, X86::VXORPDrr},
     };
-
-    SupportedPatterns.emplace_back(X86::PANDrr,  X86::PORrr,   X86::VPORrr);
-    SupportedPatterns.emplace_back(X86::VPANDrr, X86::VPORrr,  X86::VPORrr);
-    SupportedPatterns.emplace_back(X86::ANDPSrr, X86::ORPSrr,  X86::VORPSrr);
-    SupportedPatterns.emplace_back(X86::PXORrr,  X86::PANDrr, X86::VPANDrr);
-    SupportedPatterns.emplace_back(X86::VPXORrr, X86::VPANDrr,X86::VPANDrr);
-    SupportedPatterns.emplace_back(X86::PANDNrr, X86::PORrr,   X86::VPORrr);
   }
 
-  bool upgradeSingleInstruction(MachineInstr &MI) {
-    auto It = OpcodeVariantMap.find(MI.getOpcode());
-    if (It == OpcodeVariantMap.end()) {
+  bool tryFoldPair(MachineBasicBlock &MBB, MachineBasicBlock::iterator &it) {
+    MachineInstr &curr = *it;
+    if (curr.getNumOperands() < 3 || !curr.getOperand(1).isReg())
       return false;
-    }
-    MachineBasicBlock &MBB = *MI.getParent();
-    DebugLoc DL = MI.getDebugLoc();
-    BuildMI(MBB, MI, DL, TII->get(It->second))
-      .add(MI.getOperand(0))
-      .add(MI.getOperand(1))
-      .add(MI.getOperand(2));
-    MI.eraseFromParent();
+
+    Register src = curr.getOperand(1).getReg();
+    if (!RegInfo->hasOneUse(src))
+      return false;
+
+    MachineInstr *def = RegInfo->getUniqueVRegDef(src);
+    if (!def) return false;
+
+    unsigned opc1 = def->getOpcode();
+    unsigned opc2 = curr.getOpcode();
+    if (!scalarToAVX.count(opc1) || !scalarToAVX.count(opc2))
+      return false;
+
+    fuseInstructions(MBB, it, def, opc1, curr, opc2);
+    def->eraseFromParent();
+    it = MBB.erase(it);
     return true;
   }
 
-  bool combinePattern(MachineInstr &FirstMI, MachineInstr &SecondMI) {
-    for (auto &Pattern : SupportedPatterns) {
-      if (FirstMI.getOpcode() == Pattern.FirstOp && 
-        SecondMI.getOpcode() == Pattern.SecondOp) {        
-        MachineBasicBlock &MBB = *FirstMI.getParent();
-        DebugLoc DL = FirstMI.getDebugLoc();
+  void fuseInstructions(MachineBasicBlock &MBB,
+                        MachineBasicBlock::iterator &it,
+                        MachineInstr *defMI, unsigned opc1,
+                        MachineInstr &useMI, unsigned opc2) {
+    Register tmp = RegInfo->createVirtualRegister(
+      RegInfo->getRegClass(useMI.getOperand(1).getReg())
+    );
+    DebugLoc dlDef = defMI->getDebugLoc();
+    DebugLoc dlUse = useMI.getDebugLoc();
 
-        Register TempReg = MRI->createVirtualRegister(
-        MRI->getRegClass(FirstMI.getOperand(1).getReg()));
+    BuildMI(MBB, it, dlDef, TII->get(scalarToAVX[opc1]), tmp)
+      .add(defMI->getOperand(1))
+      .add(defMI->getOperand(2));
 
-        BuildMI(MBB, SecondMI, DL, TII->get(Pattern.CombinedOp), TempReg)
-          .addReg(FirstMI.getOperand(1).getReg())
-          .addReg(FirstMI.getOperand(2).getReg());
-
-        BuildMI(MBB, SecondMI, DL, TII->get(Pattern.CombinedOp),
-                SecondMI.getOperand(0).getReg())
-          .addReg(TempReg)
-          .addReg(SecondMI.getOperand(2).getReg());
-
-        FirstMI.eraseFromParent();
-        SecondMI.eraseFromParent();
-        return true;
-      }
-    }
-    return false;
+    BuildMI(MBB, it, dlUse, TII->get(scalarToAVX[opc2]),
+            useMI.getOperand(0).getReg())
+      .addReg(tmp)
+      .add(useMI.getOperand(2).getReg());
   }
 
+  bool tryUpgradeSingle(MachineBasicBlock &MBB,
+                        MachineBasicBlock::iterator &it) {
+    MachineInstr &mi = *it;
+    unsigned opc = mi.getOpcode();
+    auto itMap = scalarToAVX.find(opc);
+    if (itMap == scalarToAVX.end() || mi.getNumOperands() < 3)
+      return false;
+
+    DebugLoc dl = mi.getDebugLoc();
+    BuildMI(MBB, it, dl, TII->get(itMap->second),
+            mi.getOperand(0).getReg())
+      .add(mi.getOperand(1))
+      .add(mi.getOperand(2));
+
+    it = MBB.erase(it);
+    return true;
+  }  
 public:
   static char ID;
-
-  AVXLogicCombinerPass() : MachineFunctionPass(ID) {
-    initMappings();
-  }
-
+  AVXLogicCombinerPass() : MachineFunctionPass(ID) {}
   bool runOnMachineFunction(MachineFunction &MF) override {
     const X86Subtarget &ST = MF.getSubtarget<X86Subtarget>();
     if (!ST.hasAVX()) {
       return false;
     }
-
     TII = ST.getInstrInfo();
-    MRI = &MF.getRegInfo();
+    RegInfo = &MF.getRegInfo();
+    initMap();
     bool Changed = false;
     for (auto &MBB : MF) {
-      auto MI = MBB.begin();
-      while (MI != MBB.end()) {
-        MachineInstr &CurrentMI = *MI++;
-        if (upgradeSingleInstruction(CurrentMI)) {
+      for (auto it = MBB.begin(), end = MBB.end(); it != end; ) {
+        if (tryFoldPair(MBB, it)) {
           Changed = true;
           continue;
         }
-        if (MI == MBB.end()) {
+        if (tryUpgradeSingle(MBB, it)) {
+          Changed = true;
           continue;
         }
-        MachineInstr &NextMI = *MI;
-        if (MRI->hasOneUse(CurrentMI.getOperand(0).getReg()) &&
-          combinePattern(CurrentMI, NextMI)) {
-          Changed = true;
-          MI++;
-        }
+        ++it;
       }
     }
     return Changed;
@@ -119,7 +114,7 @@ public:
 
 char AVXLogicCombinerPass::ID = 0;
 }
-  
+
 static RegisterPass<AVXLogicCombinerPass> 
   X("x86-logic-opt", "X86 Logical Operations Chain Optimizer", false,
     false);
