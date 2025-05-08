@@ -62,6 +62,8 @@
     ret <4 x float> %3
   }
 
+  declare <2 x i64> @llvm.x86.sse2.pandn(<2 x i64>, <2 x i64>) #1
+
   ; Test 5: PANDNrr, PORrr -> VPORrr, VPORrr
   define dso_local <4 x float> @test_PANDN_POR_combine(<4 x float> %a_f, <4 x float> %b_f, <4 x float> %c_f) #0 {
   entry:
@@ -115,7 +117,7 @@ frameInfo:
   offsetAdjustment: 0
   maxAlignment:    16
   adjustsStack:    false
-  hasCalls:        true # из-за @llvm.x86.sse.and.ps
+  hasCalls:        false
   stackProtector:  ''
   functionContext: ''
   maxCallFrameSize: 0
@@ -148,7 +150,7 @@ body:             |
 
     %1:vr128 = COPY $xmm1
     %0:vr128 = COPY $xmm0
-    %2:vr128 = ANDPSrr %0, %1 ; Состояние до применения вашего пасса
+    %2:vr128 = ANDPSrr %0, %1
     $xmm0 = COPY %2
     RET 0, $xmm0
 
@@ -189,7 +191,7 @@ frameInfo:
   offsetAdjustment: 0
   maxAlignment:    16
   adjustsStack:    false
-  hasCalls:        true
+  hasCalls:        false
   stackProtector:  ''
   functionContext: ''
   maxCallFrameSize: 0
@@ -222,7 +224,7 @@ body:             |
 
     %1:vr128 = COPY $xmm1
     %0:vr128 = COPY $xmm0
-    %2:vr128 = ORPSrr %0, %1 ; Состояние до применения вашего пасса
+    %2:vr128 = ORPSrr %0, %1
     $xmm0 = COPY %2
     RET 0, $xmm0
 
@@ -263,7 +265,7 @@ frameInfo:
   offsetAdjustment: 0
   maxAlignment:    16
   adjustsStack:    false
-  hasCalls:        true
+  hasCalls:        false
   stackProtector:  ''
   functionContext: ''
   maxCallFrameSize: 0
@@ -296,7 +298,7 @@ body:             |
 
     %1:vr128 = COPY $xmm1
     %0:vr128 = COPY $xmm0
-    %2:vr128 = XORPSrr %0, %1 ; Состояние до применения вашего пасса
+    %2:vr128 = XORPSrr %0, %1 ;
     $xmm0 = COPY %2
     RET 0, $xmm0
 
@@ -322,92 +324,11 @@ debugInstrRef:   true
 failsVerification: false
 tracksDebugUserValues: true
 registers:
-  - { id: 0, class: vr128, preferred-register: '' } # a_f -> %0 (bitcast)
-  - { id: 1, class: vr128, preferred-register: '' } # b_f -> %1 (bitcast)
-  - { id: 2, class: vr128, preferred-register: '' } # c_f -> %2 (bitcast)
-  - { id: 3, class: vr128, preferred-register: '' } # результат and.i
-  - { id: 4, class: vr128, preferred-register: '' } # результат or.i
-liveins:
-  - { reg: '$xmm0', virtual-reg: '%0' } # соответствует %a_f
-  - { reg: '$xmm1', virtual-reg: '%1' } # соответствует %b_f
-  - { reg: '$xmm2', virtual-reg: '%2' } # соответствует %c_f
-frameInfo:
-  isFrameAddressTaken: false
-  isReturnAddressTaken: false
-  hasStackMap:     false
-  hasPatchPoint:   false
-  stackSize:       0
-  offsetAdjustment: 0
-  maxAlignment:    16
-  adjustsStack:    false
-  hasCalls:        false
-  stackProtector:  ''
-  functionContext: ''
-  maxCallFrameSize: 0
-  cvBytesOfCalleeSavedRegisters: 0
-  hasOpaqueSPAdjustment: false
-  hasVAStart:      false
-  hasMustTailInVarArgFunc: false
-  hasTailCall:     false
-  isCalleeSavedInfoValid: true
-  localFrameSize:  0
-  savePoint:       ''
-  restorePoint:    ''
-fixedStack:      []
-stack:           []
-entry_values:    []
-callSites:       []
-debugValueSubstitutions: []
-constants:       []
-machineFunctionInfo:
-  amxProgModel:    None
-body:             |
-  bb.0.entry:
-    liveins: $xmm0, $xmm1, $xmm2
-
-    ; CHECK: %2:vr128 = COPY $xmm2    ; c_f
-    ; CHECK-NEXT: %1:vr128 = COPY $xmm1 ; b_f
-    ; CHECK-NEXT: %0:vr128 = COPY $xmm0 ; a_f
-    ; CHECK-NEXT: %3:vr128 = VPANDrr %0, %1  ; and.i = a & b (после bitcast)
-    ; CHECK-NEXT: %4:vr128 = VPORrr %3, %2   ; or.i = and.i | c (после bitcast)
-    ; CHECK-NEXT: $xmm0 = COPY %4
-    ; CHECK-NEXT: RET 0, $xmm0
-
-    %2:vr128 = COPY $xmm2
-    %1:vr128 = COPY $xmm1
-    %0:vr128 = COPY $xmm0
-    %3:vr128 = PANDrr %0, %1  ; and.i (до пасса)
-    %4:vr128 = PORrr %3, %2   ; or.i (до пасса)
-    $xmm0 = COPY %4
-    RET 0, $xmm0
-
-...
----
-# CHECK-LABEL: name: test_VPXOR_VPAND_combine
-name:            test_VPXOR_VPAND_combine
-alignment:       16
-exposesReturnsTwice: false
-legalized:       false
-regBankSelected: false
-selected:        false
-failedISel:      false
-tracksRegLiveness: true
-hasWinCFI:       false
-callsEHReturn:   false
-callsUnwindInit: false
-hasEHCatchret:   false
-hasEHScopes:     false
-hasEHFunclets:   false
-isOutlined:      false
-debugInstrRef:   true
-failsVerification: false
-tracksDebugUserValues: true
-registers:
   - { id: 0, class: vr128, preferred-register: '' }
-  - { id: 1, class: vr128, preferred-register: '' }
+  - { id: 1, class: vr128, preferred-register: '' } 
   - { id: 2, class: vr128, preferred-register: '' }
-  - { id: 3, class: vr128, preferred-register: '' } # результат xor.i
-  - { id: 4, class: vr128, preferred-register: '' } # результат and.i
+  - { id: 3, class: vr128, preferred-register: '' }
+  - { id: 4, class: vr128, preferred-register: '' }
 liveins:
   - { reg: '$xmm0', virtual-reg: '%0' }
   - { reg: '$xmm1', virtual-reg: '%1' }
@@ -449,16 +370,97 @@ body:             |
     ; CHECK: %2:vr128 = COPY $xmm2
     ; CHECK-NEXT: %1:vr128 = COPY $xmm1
     ; CHECK-NEXT: %0:vr128 = COPY $xmm0
-    ; CHECK-NEXT: %3:vr128 = VPXORrr %0, %1 ; xor.i = a ^ b
-    ; CHECK-NEXT: %4:vr128 = VPANDrr %3, %2  ; and.i = xor.i & c
+    ; CHECK-NEXT: %3:vr128 = VPANDrr %0, %1
+    ; CHECK-NEXT: %4:vr128 = VPORrr %3, %2
     ; CHECK-NEXT: $xmm0 = COPY %4
     ; CHECK-NEXT: RET 0, $xmm0
 
     %2:vr128 = COPY $xmm2
     %1:vr128 = COPY $xmm1
     %0:vr128 = COPY $xmm0
-    %3:vr128 = PXORrr %0, %1 ; xor.i (до пасса)
-    %4:vr128 = PANDrr %3, %2  ; and.i (до пасса)
+    %3:vr128 = PANDrr %0, %1
+    %4:vr128 = PORrr %3, %2
+    $xmm0 = COPY %4
+    RET 0, $xmm0
+
+...
+---
+# CHECK-LABEL: name: test_VPXOR_VPAND_combine
+name:            test_VPXOR_VPAND_combine
+alignment:       16
+exposesReturnsTwice: false
+legalized:       false
+regBankSelected: false
+selected:        false
+failedISel:      false
+tracksRegLiveness: true
+hasWinCFI:       false
+callsEHReturn:   false
+callsUnwindInit: false
+hasEHCatchret:   false
+hasEHScopes:     false
+hasEHFunclets:   false
+isOutlined:      false
+debugInstrRef:   true
+failsVerification: false
+tracksDebugUserValues: true
+registers:
+  - { id: 0, class: vr128, preferred-register: '' }
+  - { id: 1, class: vr128, preferred-register: '' }
+  - { id: 2, class: vr128, preferred-register: '' }
+  - { id: 3, class: vr128, preferred-register: '' }
+  - { id: 4, class: vr128, preferred-register: '' }
+liveins:
+  - { reg: '$xmm0', virtual-reg: '%0' }
+  - { reg: '$xmm1', virtual-reg: '%1' }
+  - { reg: '$xmm2', virtual-reg: '%2' }
+frameInfo:
+  isFrameAddressTaken: false
+  isReturnAddressTaken: false
+  hasStackMap:     false
+  hasPatchPoint:   false
+  stackSize:       0
+  offsetAdjustment: 0
+  maxAlignment:    16
+  adjustsStack:    false
+  hasCalls:        false
+  stackProtector:  ''
+  functionContext: ''
+  maxCallFrameSize: 0
+  cvBytesOfCalleeSavedRegisters: 0
+  hasOpaqueSPAdjustment: false
+  hasVAStart:      false
+  hasMustTailInVarArgFunc: false
+  hasTailCall:     false
+  isCalleeSavedInfoValid: true
+  localFrameSize:  0
+  savePoint:       ''
+  restorePoint:    ''
+fixedStack:      []
+stack:           []
+entry_values:    []
+callSites:       []
+debugValueSubstitutions: []
+constants:       []
+machineFunctionInfo:
+  amxProgModel:    None
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
+    ; CHECK-NEXT: %3:vr128 = VPXORrr %0, %1
+    ; CHECK-NEXT: %4:vr128 = VPANDrr %3, %2
+    ; CHECK-NEXT: $xmm0 = COPY %4
+    ; CHECK-NEXT: RET 0, $xmm0
+
+    %2:vr128 = COPY $xmm2
+    %1:vr128 = COPY $xmm1
+    %0:vr128 = COPY $xmm0
+    %3:vr128 = PXORrr %0, %1
+    %4:vr128 = PANDrr %3, %2
     $xmm0 = COPY %4
     RET 0, $xmm0
 
@@ -484,11 +486,11 @@ debugInstrRef:   true
 failsVerification: false
 tracksDebugUserValues: true
 registers:
-  - { id: 0, class: vr128, preferred-register: '' } # a_f -> %0
-  - { id: 1, class: vr128, preferred-register: '' } # b_f -> %1
-  - { id: 2, class: vr128, preferred-register: '' } # c_f -> %2
-  - { id: 3, class: vr128, preferred-register: '' } # результат PANDNrr (до пасса) или первый VPORrr (после пасса)
-  - { id: 4, class: vr128, preferred-register: '' } # результат PORrr (до пасса) или второй VPORrr (после пасса)
+  - { id: 0, class: vr128, preferred-register: '' }
+  - { id: 1, class: vr128, preferred-register: '' }
+  - { id: 2, class: vr128, preferred-register: '' }
+  - { id: 3, class: vr128, preferred-register: '' }
+  - { id: 4, class: vr128, preferred-register: '' }
 liveins:
   - { reg: '$xmm0', virtual-reg: '%0' }
   - { reg: '$xmm1', virtual-reg: '%1' }
@@ -502,7 +504,7 @@ frameInfo:
   offsetAdjustment: 0
   maxAlignment:    16
   adjustsStack:    false
-  hasCalls:        true # из-за @llvm.x86.sse2.pandn
+  hasCalls:        true
   stackProtector:  ''
   functionContext: ''
   maxCallFrameSize: 0
@@ -527,24 +529,20 @@ body:             |
   bb.0.entry:
     liveins: $xmm0, $xmm1, $xmm2
 
-    ; CHECK: %2:vr128 = COPY $xmm2         ; c_f (для VPORrr %3, %2)
-    ; CHECK-NEXT: %1:vr128 = COPY $xmm1      ; b_f (для VPORrr %0, %1)
-    ; CHECK-NEXT: %0:vr128 = COPY $xmm0      ; a_f (для VPORrr %0, %1)
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
     ; CHECK-NOT: PANDNrr
     ; CHECK-NOT: PORrr {{%[0-9]+}}:vr128, {{%[0-9]+}}:vr128
-    ; CHECK: %3:vr128 = VPORrr %0, %1       ; Первая новая инструкция: VPORrr %a, %b
-    ; CHECK-NEXT: %4:vr128 = VPORrr %3, %2    ; Вторая новая инструкция: VPORrr %3, %c
+    ; CHECK: %3:vr128 = VPORrr %0, %1
+    ; CHECK-NEXT: %4:vr128 = VPORrr %3, %2
     ; CHECK-NEXT: $xmm0 = COPY %4
     ; CHECK-NEXT: RET 0, $xmm0
 
     %2:vr128 = COPY $xmm2
     %1:vr128 = COPY $xmm1
     %0:vr128 = COPY $xmm0
-    ; %3 будет результатом PANDNrr %0, %1 (т.е. ~%0 & %1)
-    ; %4 будет результатом PORrr %3, %2
-    ; PANDNrr $dst, $src1, $src2 is $dst = ~$src1 & $src2
-    ; llvm.x86.sse2.pandn(%val_a, %val_b) -> ~val_a & val_b
-    %3:vr128 = PANDNrr %0, %1 ; pandn_final_res (до пасса)
-    %4:vr128 = PORrr %3, %2   ; or_res (до пасса)
+    %3:vr128 = PANDNrr %0, %1
+    %4:vr128 = PORrr %3, %2
     $xmm0 = COPY %4
     RET 0, $xmm0
