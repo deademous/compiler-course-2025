@@ -121,5 +121,5 @@ char AVXLogicCombinerPass::ID = 0;
 }
   
 static RegisterPass<AVXLogicCombinerPass> 
-  X("x86-logic-chain", "X86 Logical Operations Chain Optimizer", false,
+  X("x86-logic-opt", "X86 Logical Operations Chain Optimizer", false,
     false);
