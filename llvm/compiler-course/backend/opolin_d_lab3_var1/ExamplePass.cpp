@@ -57,13 +57,13 @@ class AVXLogicCombinerPass : public MachineFunctionPass {
     DebugLoc dlUse = useMI.getDebugLoc();
 
     BuildMI(MBB, it, dlDef, TII->get(scalarToAVX[opc1]), tmp)
-      .add(defMI->getOperand(1))
-      .add(defMI->getOperand(2));
+      .addReg(defMI->getOperand(1).getReg())
+      .addReg(defMI->getOperand(2).getReg());
 
     BuildMI(MBB, it, dlUse, TII->get(scalarToAVX[opc2]),
             useMI.getOperand(0).getReg())
       .addReg(tmp)
-      .add(useMI.getOperand(2).getReg());
+      .addReg(useMI.getOperand(2).getReg());
   }
 
   bool tryUpgradeSingle(MachineBasicBlock &MBB,
@@ -77,9 +77,8 @@ class AVXLogicCombinerPass : public MachineFunctionPass {
     DebugLoc dl = mi.getDebugLoc();
     BuildMI(MBB, it, dl, TII->get(itMap->second),
             mi.getOperand(0).getReg())
-      .add(mi.getOperand(1))
-      .add(mi.getOperand(2));
-
+      .addReg(mi.getOperand(1).getReg())
+      .addReg(mi.getOperand(2).getReg());
     it = MBB.erase(it);
     return true;
   }  
