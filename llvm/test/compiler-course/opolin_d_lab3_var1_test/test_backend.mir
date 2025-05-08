@@ -64,7 +64,7 @@
 
   declare <2 x i64> @llvm.x86.sse2.pandn(<2 x i64>, <2 x i64>) #1
 
-  ; Test 5: PANDNrr, PORrr -> VPORrr, VPORrr
+  ; Test 6: PANDNrr, PORrr -> VPORrr, VPORrr
   define dso_local <4 x float> @test_PANDN_POR_combine(<4 x float> %a_f, <4 x float> %b_f, <4 x float> %c_f) #0 {
   entry:
     %0 = bitcast <4 x float> %a_f to <4 x i32>
@@ -117,7 +117,7 @@ frameInfo:
   offsetAdjustment: 0
   maxAlignment:    16
   adjustsStack:    false
-  hasCalls:        false
+  hasCalls:        true
   stackProtector:  ''
   functionContext: ''
   maxCallFrameSize: 0
@@ -191,7 +191,7 @@ frameInfo:
   offsetAdjustment: 0
   maxAlignment:    16
   adjustsStack:    false
-  hasCalls:        false
+  hasCalls:        true
   stackProtector:  ''
   functionContext: ''
   maxCallFrameSize: 0
@@ -265,7 +265,7 @@ frameInfo:
   offsetAdjustment: 0
   maxAlignment:    16
   adjustsStack:    false
-  hasCalls:        false
+  hasCalls:        true
   stackProtector:  ''
   functionContext: ''
   maxCallFrameSize: 0
