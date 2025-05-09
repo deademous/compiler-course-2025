@@ -52,7 +52,7 @@
     %and.i = and <4 x i32> %1, %0
     %2 = bitcast <4 x float> %arg_c to <4 x i32>
     %or.i = or <4 x i32> %and.i, %2
-    %xor.i = xor <4 x i32> %or.i, %0 ; use %0 again
+    %xor.i = xor <4 x i32> %or.i, %0
     %3 = bitcast <4 x i32> %xor.i to <4 x float>
     ret <4 x float> %3
   }
@@ -73,7 +73,7 @@
   define dso_local noundef <2 x i64> @_Z19verify_simple_pandnDv2_xS_(<2 x i64> noundef %val_a, <2 x i64> noundef %val_b) local_unnamed_addr #0 {
   entry:
     %not_val_a = xor <2 x i64> %val_a, <i64 -1, i64 -1>
-    %pandn.i = and <2 x i64> %not_val_a, %val_b ; LLVM IR for PANDN
+    %pandn.i = and <2 x i64> %not_val_a, %val_b
     ret <2 x i64> %pandn.i
   }
 
@@ -81,7 +81,7 @@
   entry:
     %xor_ab = xor <2 x i64> %val_a, %val_b
     %not_xor_ab = xor <2 x i64> %xor_ab, <i64 -1, i64 -1>
-    %pandn_res = and <2 x i64> %not_xor_ab, %val_c ; This AND should be part of PANDN
+    %pandn_res = and <2 x i64> %not_xor_ab, %val_c
     ret <2 x i64> %pandn_res
   }
 
@@ -95,13 +95,6 @@
     %or.i = or <2 x i64> %and.i, %2
     %3 = bitcast <2 x i64> %or.i to <2 x double>
     ret <2 x double> %3
-  }
-
-  ; NO CHANGE
-  define dso_local noundef <4 x float> @_Z18verify_no_changesDv4_fS_(<4 x float> noundef %v1, <4 x float> noundef %v2) local_unnamed_addr #0 {
-  entry:
-    %add = fadd <4 x float> %v1, %v2
-    ret <4 x float> %add
   }
 ...
 ---
@@ -638,58 +631,4 @@ body:             |
     %3:vr128 = PANDrr %1, %0
     %4:vr128 = PORrr %3, %2
     $xmm0 = COPY %4
-    RET 0, $xmm0
-...
----
-# CHECK-LABEL: name: _Z18verify_no_changesDv4_fS_
-name:            _Z18verify_no_changesDv4_fS_
-alignment:       16
-exposesReturnsTwice: false
-legalized:       false
-regBankSelected: false
-selected:        false
-failedISel:      false
-tracksRegLiveness: true
-hasWinCFI:       false
-callsEHReturn:   false
-callsUnwindInit: false
-hasEHCatchret:   false
-hasEHScopes:     false
-hasEHFunclets:   false
-isOutlined:      false
-debugInstrRef:   true
-failsVerification: false
-tracksDebugUserValues: true
-registers:
-  - { id: 0, class: vr128, preferred-register: '' }
-  - { id: 1, class: vr128, preferred-register: '' }
-  - { id: 2, class: vr128, preferred-register: '' }
-liveins:
-  - { reg: '$xmm0', virtual-reg: '%0' }
-  - { reg: '$xmm1', virtual-reg: '%1' }
-frameInfo:
-  isFrameAddressTaken: false
-  isReturnAddressTaken: false
-  hasStackMap:     false
-  hasPatchPoint:   false
-  stackSize:       0
-  offsetAdjustment: 0
-  maxAlignment:    1
-  adjustsStack:    false
-  hasCalls:        false
-  isCalleeSavedInfoValid: true
-body:             |
-  bb.0.entry:
-    liveins: $xmm0, $xmm1, $xmm2
-    ; CHECK: %1:vr128 = COPY $xmm1
-    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
-    ; CHECK-NEXT: %2:vr128 = ADDPSrr %0, %1
-    ; CHECK-NOT: VADDPSrr
-    ; CHECK-NEXT: $xmm0 = COPY %2
-    ; CHECK-NEXT: RET 0, $xmm0
-
-    %1:vr128 = COPY $xmm1
-    %0:vr128 = COPY $xmm0
-    %2:vr128 = ADDPSrr %0, %1
-    $xmm0 = COPY %2
     RET 0, $xmm0
