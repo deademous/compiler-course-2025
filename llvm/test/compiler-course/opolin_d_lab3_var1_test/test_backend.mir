@@ -44,7 +44,7 @@
     ret <4 x float> %2
   }
 
-  ; AND -> OR -> XOR
+  ; (B AND A) OR C XOR A
   define dso_local noundef <4 x float> @_Z25verify_chained_float_opsDv4_fS_S_(<4 x float> noundef %arg_a, <4 x float> noundef %arg_b, <4 x float> noundef %arg_c) local_unnamed_addr #0 {
   entry:
     %0 = bitcast <4 x float> %arg_a to <4 x i32>
@@ -57,7 +57,7 @@
     ret <4 x float> %3
   }
 
-  ; AND-OR
+  ; (Y AND X) OR Z
   define dso_local noundef <4 x float> @_Z23verify_fused_and_or_floatDv4_fS_S_(<4 x float> noundef %param_x, <4 x float> noundef %param_y, <4 x float> noundef %param_z) local_unnamed_addr #0 {
   entry:
     %0 = bitcast <4 x float> %param_x to <4 x i32>
@@ -69,7 +69,7 @@
     ret <4 x float> %3
   }
 
-  ; PANDN
+  ; (NOT A) AND B
   define dso_local noundef <2 x i64> @_Z19verify_simple_pandnDv2_xS_(<2 x i64> noundef %val_a, <2 x i64> noundef %val_b) local_unnamed_addr #0 {
   entry:
     %not_val_a = xor <2 x i64> %val_a, <i64 -1, i64 -1>
@@ -77,6 +77,7 @@
     ret <2 x i64> %pandn.i
   }
 
+  ; (NOT (A XOR B)) AND C
   define dso_local noundef <2 x i64> @_Z25verify_fused_xor_pandnDv2_xS_S_(<2 x i64> noundef %val_a, <2 x i64> noundef %val_b, <2 x i64> noundef %val_c) local_unnamed_addr #0 {
   entry:
     %xor_ab = xor <2 x i64> %val_a, %val_b
@@ -85,7 +86,7 @@
     ret <2 x i64> %pandn_res
   }
 
-  ; AND-OR
+  ; (B AND A) OR C
   define dso_local noundef <2 x double> @_Z24verify_fused_and_or_doubleDv2_dS_S_(<2 x double> noundef %pd_a, <2 x double> noundef %pd_b, <2 x double> noundef %pd_c) local_unnamed_addr #0 {
   entry:
     %0 = bitcast <2 x double> %pd_a to <2 x i64>
