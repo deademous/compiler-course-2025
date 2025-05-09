@@ -90,9 +90,6 @@ public:
   AVXLogicCombinerPass() : MachineFunctionPass(ID) {}
   bool runOnMachineFunction(MachineFunction &MF) override {
     const X86Subtarget &ST = MF.getSubtarget<X86Subtarget>();
-    if (!ST.hasAVX()) {
-      return false;
-    }
     TII = ST.getInstrInfo();
     RegInfo = &MF.getRegInfo();
     initMap();

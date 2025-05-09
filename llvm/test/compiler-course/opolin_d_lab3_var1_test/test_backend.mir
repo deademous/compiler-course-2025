@@ -1,4 +1,4 @@
-# RUN: llc -mtriple x86_64-unknown-linux-gnu -mattr=+avx --load=%llvmshlibdir/AVXLogicCombinerPass_Opolin_Dmitry_FIIT2_BACKEND%shlibext \
+# RUN: llc -mtriple x86_64-unknown-linux-gnu --load=%llvmshlibdir/AVXLogicCombinerPass_Opolin_Dmitry_FIIT2_BACKEND%shlibext \
 # RUN: -run-pass=x86-logic-opt  %s -o - | FileCheck %s
 
 
