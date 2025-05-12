@@ -85,12 +85,13 @@ class AVXLogicCombinerPass : public MachineFunctionPass {
 
 public:
   static char ID;
-  AVXLogicCombinerPass() : MachineFunctionPass(ID) {}
+  AVXLogicCombinerPass() : MachineFunctionPass(ID) {
+    initMap();
+  }
   bool runOnMachineFunction(MachineFunction &MF) override {
     const X86Subtarget &ST = MF.getSubtarget<X86Subtarget>();
     TII = ST.getInstrInfo();
     RegInfo = &MF.getRegInfo();
-    initMap();
     bool Changed = false;
     for (auto &MBB : MF) {
       for (auto it = MBB.begin(), end = MBB.end(); it != end;) {
