@@ -80,6 +80,10 @@ define double @division(double %a, double %b, double %c) {
   ret double %div
 }
 
+; CHECK-LABEL: @multi_use2
+; CHECK: call float @llvm.fmuladd.f32(float %a, float %b, float %c)
+; CHECK: fmul float %a, %b
+; CHECK-NOT: fadd float
 define float @multi_use2(float %a, float %b, float %c, float %d) {
   %mul = fmul float %a, %b
   %add1 = fadd float %mul, %c
