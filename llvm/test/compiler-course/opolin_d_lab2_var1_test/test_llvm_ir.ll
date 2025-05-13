@@ -79,3 +79,10 @@ define double @division(double %a, double %b, double %c) {
   %add = fadd double %div, %c
   ret double %div
 }
+
+define float @multi_use2(float %a, float %b, float %c, float %d) {
+  %mul = fmul float %a, %b
+  %add1 = fadd float %mul, %c
+  %add2 = fdiv float %add1, %mul
+  ret float %add2
+}
