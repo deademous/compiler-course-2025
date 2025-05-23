@@ -63,11 +63,11 @@ class AVXLogicCombinerPass : public MachineFunctionPass {
     DebugLoc dlDef = defMI->getDebugLoc();
     DebugLoc dlUse = useMI.getDebugLoc();
 
-    BuildMI(MBB, it, dlDef, TII->get(scalarToAVX[opc1]), tmp)
+    BuildMI(MBB, it, dlDef, TII->get(scalarToAVX.at(opc1)), tmp)
         .addReg(defMI->getOperand(1).getReg())
         .addReg(defMI->getOperand(2).getReg());
 
-    BuildMI(MBB, it, dlUse, TII->get(scalarToAVX[opc2]),
+    BuildMI(MBB, it, dlUse, TII->get(scalarToAVX.at(opc2)),
             useMI.getOperand(0).getReg())
         .addReg(tmp)
         .addReg(useMI.getOperand(2).getReg());
